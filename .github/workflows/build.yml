@@ -4,8 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       ipa_url:
-        description: 'Link directo de descarga del IPA (Google Drive)'
+        description: 'Link de Google Drive del IPA'
         required: true
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -19,6 +22,7 @@ jobs:
         run: |
           pip install gdown --quiet
           gdown "${{ github.event.inputs.ipa_url }}" -O gtok_2_5_3.ipa
+          ls -lh gtok_2_5_3.ipa
 
       - name: Install insert_dylib
         run: |
@@ -47,4 +51,22 @@ jobs:
         run: |
           mkdir -p build_tmp
           unzip -q gtok_2_5_3.ipa -d build_tmp
-          cp LiquidGlass.dylib build
+          cp LiquidGlass.dylib build_tmp/Payload/TikTok.app/Frameworks/LiquidGlass.dylib
+          insert_dylib \
+            --strip-codesig \
+            --inplace \
+            "@rpath/LiquidGlass.dylib" \
+            build_tmp/Payload/TikTok.app/TikTok
+          cd build_tmp
+          zip -qr ../gtok_2_5_3_liquidglass.ipa Payload/
+          cd ..
+          ls -lh gtok_2_5_3_liquidglass.ipa
+
+      - name: Crear Release y subir IPA
+        run: |
+          gh release create "liquidglass-v1" \
+            --title "TikTok LiquidGlass" \
+            --notes "IPA modificado con liquid glass effect" \
+            gtok_2_5_3_liquidglass.ipa
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
