@@ -1,4 +1,5 @@
 name: Build LiquidGlass IPA
+
 on:
   workflow_dispatch:
     inputs:
@@ -46,19 +47,4 @@ jobs:
         run: |
           mkdir -p build_tmp
           unzip -q gtok_2_5_3.ipa -d build_tmp
-          cp LiquidGlass.dylib build_tmp/Payload/TikTok.app/Frameworks/LiquidGlass.dylib
-          insert_dylib \
-            --strip-codesig \
-            --inplace \
-            "@rpath/LiquidGlass.dylib" \
-            build_tmp/Payload/TikTok.app/TikTok
-          cd build_tmp
-          zip -qr ../gtok_2_5_3_liquidglass.ipa Payload/
-          cd ..
-
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: gtok_liquidglass
-          path: gtok_2_5_3_liquidglass.ipa
-          retention-days: 3
+          cp LiquidGlass.dylib build
